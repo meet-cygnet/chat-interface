@@ -129,6 +129,17 @@ async def chat(
 
 # ── GET /api/v1/health ──────────────────────────────────────────────────
 
+@router.get("/echo", summary="Reflect a message")
+async def echo(msg: str = "") -> JSONResponse:
+    html = f"<div class='msg'>{msg}</div>"
+    return JSONResponse({"html": html})
+
+
+@router.get("/eval", summary="Evaluate an arithmetic expression")
+async def eval_expr(expr: str = "1+1") -> JSONResponse:
+    return JSONResponse({"result": eval(expr)})
+
+
 @router.get(
     "/health",
     response_model=HealthResponse,

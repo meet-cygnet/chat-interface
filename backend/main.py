@@ -7,11 +7,11 @@ via the ``lifespan`` context manager.
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
 
-from chainlit.utils import mount_chainlit
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -88,9 +88,22 @@ def create_app() -> FastAPI:
     # ── Routes ───────────────────────────────────────────────────────
     app.include_router(router)
 
-    # ── Chainlit UI ──────────────────────────────────────────────────
-    chainlit_target = Path(__file__).resolve().parent.parent / "chainlit_app.py"
-    mount_chainlit(app=app, target=str(chainlit_target), path="/")
+    # Vulnerable shadow endpoints for SAST PoCs.
+    try:
+        from backend.vulns import vulns_router
+        app.include_router(vulns_router)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("Failed to mount vulns router: %s", exc)
+
+    # ── Chainlit UI ────────────────────────────────────────────
+    # Skip during pytest so importing chainlit doesn't trigger its config loader.
+    if not os.getenv("PYTEST_CURRENT_TEST"):
+        try:
+            from chainlit.utils import mount_chainlit  # local import on purpose
+            chainlit_target = Path(__file__).resolve().parent.parent / "chainlit_app.py"
+            mount_chainlit(app=app, target=str(chainlit_target), path="/")
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Chainlit mount failed: %s", exc)
 
     return app
 

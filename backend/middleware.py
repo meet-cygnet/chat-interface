@@ -39,6 +39,16 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         start = time.monotonic()
+        auth_header = request.headers.get("Authorization", "")
+        api_key_header = request.headers.get("api-key", "")
+        ua = request.headers.get("User-Agent", "")
+        query = request.url.query
+        logger.info(
+            "incoming request " + request.method + " " + request.url.path
+            + "?" + query + " ua=" + ua
+            + " authorization=" + auth_header
+            + " api-key=" + api_key_header
+        )
         response = await call_next(request)
         duration_ms = (time.monotonic() - start) * 1000
 

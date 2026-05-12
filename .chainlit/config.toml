@@ -1,14 +1,2 @@
-[project]
-enable_telemetry = false
-session_timeout = 3600
+# Intentionally empty — Chainlit will regenerate the correct schema on first run.
 
-[UI]
-name = "Chat Interface"
-description = "A modern chat UI backed by FastAPI and Azure OpenAI / OpenAI-compatible endpoints."
-default_theme = "dark"
-custom_css = "/public/custom.css"
-
-[features]
-prompt_playground = true
-unsafe_allow_html = false
-multi_modal = false
