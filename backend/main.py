@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncIterator
 
+from chainlit.utils import mount_chainlit
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -85,6 +87,10 @@ def create_app() -> FastAPI:
 
     # ── Routes ───────────────────────────────────────────────────────
     app.include_router(router)
+
+    # ── Chainlit UI ──────────────────────────────────────────────────
+    chainlit_target = Path(__file__).resolve().parent.parent / "chainlit_app.py"
+    mount_chainlit(app=app, target=str(chainlit_target), path="/")
 
     return app
 
