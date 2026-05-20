@@ -21,9 +21,9 @@ def _backend_base_url() -> str:
 
 
 def _detect_mode(uri: str) -> str:
-    if "/openai/responses" in (uri or ""):
+    if "/openai/responses" in (uri or "") or "/openai/v1/responses" in (uri or "") or (uri or "").endswith("/responses"):
         return "azure-responses"
-    if "/openai/deployments/" in (uri or ""):
+    if "/openai/deployments/" in (uri or "") or ("services.ai.azure.com" in (uri or "") and "/openai/v1" in (uri or "")):
         return "azure-chat"
     return "openai"
 
@@ -31,7 +31,7 @@ def _detect_mode(uri: str) -> str:
 def _initial_model() -> str:
     settings = get_settings()
     mode = _detect_mode(settings.target_uri)
-    if mode == "azure-responses":
+    if mode in ("azure-responses", "azure-chat"):
         return settings.azure_deployment
     if mode == "openai":
         return "gpt-4o"

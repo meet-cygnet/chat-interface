@@ -28,7 +28,7 @@ def detect_mode(uri: str) -> str:
     """Return ``'azure-chat'``, ``'azure-responses'``, or ``'openai'``."""
     if "/openai/responses" in (uri or "") or "/openai/v1/responses" in (uri or "") or (uri or "").endswith("/responses"):
         return "azure-responses"
-    if "/openai/deployments/" in (uri or ""):
+    if "/openai/deployments/" in (uri or "") or ("services.ai.azure.com" in (uri or "") and "/openai/v1" in (uri or "")):
         return "azure-chat"
     return "openai"
 
@@ -157,7 +157,8 @@ class ChatService:
 
         mode = detect_mode(uri)
         headers = self._build_headers(mode, key)
-        payload = self._build_payload(mode, messages, temperature, max_tokens, model)
+        resolved_model = model or (self._settings.azure_deployment if self._settings.azure_deployment else None)
+        payload = self._build_payload(mode, messages, temperature, max_tokens, resolved_model)
 
         start = time.monotonic()
         data = await self._post_with_retry(uri, headers, payload)
@@ -196,20 +197,31 @@ class ChatService:
                 raise ValueError(
                     "Azure Responses API requires a deployment name in 'model'."
                 )
-            # Transform messages to include 'type' field for Responses API
-            transformed_input = []
-            for msg in messages:
-                transformed_input.append({
-                    "type": "message",
-                    "role": msg.get("role"),
-                    "content": msg.get("content")
-                })
-            return {
-                "model": model,
-                "input": transformed_input,
-                "temperature": temperature,
-                "max_output_tokens": max_tokens,
-            }
+            # Responses API accepts either a string input or message array
+            # For single user message, use string; for multi-turn, use message array
+            if len(messages) == 1 and messages[0].get("role") == "user":
+                # Simple single-turn conversation - use string input
+                return {
+                    "model": model,
+                    "input": messages[0].get("content", ""),
+                    "temperature": temperature,
+                    "max_output_tokens": max_tokens,
+                }
+            else:
+                # Multi-turn conversation - use message array with type field
+                transformed_input = []
+                for msg in messages:
+                    transformed_input.append({
+                        "type": "message",
+                        "role": msg.get("role"),
+                        "content": msg.get("content")
+                    })
+                return {
+                    "model": model,
+                    "input": transformed_input,
+                    "temperature": temperature,
+                    "max_output_tokens": max_tokens,
+                }
         payload: dict[str, Any] = {
             "messages": messages,
             "temperature": temperature,
