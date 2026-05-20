@@ -196,9 +196,17 @@ class ChatService:
                 raise ValueError(
                     "Azure Responses API requires a deployment name in 'model'."
                 )
+            # Transform messages to include 'type' field for Responses API
+            transformed_input = []
+            for msg in messages:
+                transformed_input.append({
+                    "type": "message",
+                    "role": msg.get("role"),
+                    "content": msg.get("content")
+                })
             return {
                 "model": model,
-                "input": messages,
+                "input": transformed_input,
                 "temperature": temperature,
                 "max_output_tokens": max_tokens,
             }
