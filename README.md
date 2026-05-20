@@ -27,8 +27,8 @@ python run.py
 > installs all dependencies into it on first run. Nothing is installed globally.
 > You can also run `python setup.py` to set up the venv separately.
 
-- **Chat UI**  -> http://localhost:8000
-- **Backend**  -> http://localhost:8000/api/v1/health
+- **Chat UI**  → http://localhost:8000
+- **Health**   → http://localhost:8000/api/v1/health
 - **API Docs** → http://localhost:8000/docs
 
 ## Configuration
@@ -56,6 +56,7 @@ All settings via `.env` (or environment variables):
 | `POOL_SIZE` | Max outbound connections | `100` |
 | `CONNECT_TIMEOUT` | TCP connect timeout (s) | `5.0` |
 | `READ_TIMEOUT` | HTTP read timeout (s) | `60.0` |
+| `WRITE_TIMEOUT` | HTTP write timeout (s) | `10.0` |
 
 ### Rate Limiting
 | Variable | Description | Default |
@@ -102,20 +103,26 @@ chat-interface/
 ├── config.py              # Centralized Pydantic settings
 ├── logging_config.py      # Structured logging setup
 ├── run.py                 # Launcher (backend + Chainlit UI)
+├── setup.py               # Standalone venv + dependency bootstrap
 ├── chainlit_app.py        # Chainlit UI (mounted into FastAPI)
+├── app.py                 # Legacy standalone Streamlit UI
 ├── .chainlit/
 │   └── config.toml        # Chainlit configuration
 ├── public/
 │   ├── custom.css         # Custom styling
 │   └── *.svg              # Icon assets
 ├── backend/
+│   ├── __init__.py
 │   ├── main.py            # FastAPI app with lifespan + Chainlit mount
 │   ├── routes.py          # API routes
 │   ├── schemas.py         # Pydantic models
 │   ├── service.py         # Async chat service + connection pool
 │   ├── rate_limiter.py    # Token-bucket rate limiter
 │   └── middleware.py      # Request ID, logging, error handling
+├── frontend/
+│   └── app.py             # Legacy Streamlit UI (no longer launched)
 └── tests/
+    ├── __init__.py
     ├── test_service.py
     └── test_routes.py
 ```
