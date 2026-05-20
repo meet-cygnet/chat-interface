@@ -103,7 +103,7 @@ def main() -> None:
     # Read config from env.
     backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
     backend_port = os.getenv("BACKEND_PORT", "8000")
-    workers = os.getenv("WORKERS", "4")
+    workers = os.getenv("WORKERS", "1")
     log_level = os.getenv("LOG_LEVEL", "info").lower()
 
     # All subprocesses use the venv Python.

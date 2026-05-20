@@ -26,7 +26,7 @@ _RETRYABLE_STATUS_CODES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
 
 def detect_mode(uri: str) -> str:
     """Return ``'azure-chat'``, ``'azure-responses'``, or ``'openai'``."""
-    if "/openai/responses" in (uri or ""):
+    if "/openai/responses" in (uri or "") or "/openai/v1/responses" in (uri or "") or (uri or "").endswith("/responses"):
         return "azure-responses"
     if "/openai/deployments/" in (uri or ""):
         return "azure-chat"
