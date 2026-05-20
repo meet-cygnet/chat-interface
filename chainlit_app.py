@@ -6,7 +6,7 @@ import chainlit as cl
 import httpx
 from chainlit.input_widget import Slider, TextInput
 
-from config import get_settings
+from backend.core.config import get_settings
 
 _SYSTEM_PROMPT = "You are a helpful assistant."
 _HTTP_TIMEOUT = httpx.Timeout(connect=5.0, read=120.0, write=10.0, pool=10.0)

@@ -15,6 +15,8 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.core.config import get_settings
+from backend.core.logging_config import setup_logging
 from backend.middleware import (
     GlobalExceptionMiddleware,
     LoggingMiddleware,
@@ -23,8 +25,6 @@ from backend.middleware import (
 from backend.rate_limiter import TokenBucketRateLimiter
 from backend.routes import router
 from backend.service import ChatService
-from config import get_settings
-from logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

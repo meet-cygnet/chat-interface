@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 
-from config import Settings, get_settings
+from backend.core.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
