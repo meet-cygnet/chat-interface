@@ -102,10 +102,9 @@ Liveness/readiness check — returns uptime and pool status.
 chat-interface/
 ├── config.py              # Centralized Pydantic settings
 ├── logging_config.py      # Structured logging setup
-├── run.py                 # Launcher (backend + Chainlit UI)
+├── run.py                 # Launcher (backend with Chainlit UI)
 ├── setup.py               # Standalone venv + dependency bootstrap
 ├── chainlit_app.py        # Chainlit UI (mounted into FastAPI)
-├── app.py                 # Legacy standalone Streamlit UI
 ├── .chainlit/
 │   └── config.toml        # Chainlit configuration
 ├── public/
@@ -119,17 +118,9 @@ chat-interface/
 │   ├── service.py         # Async chat service + connection pool
 │   ├── rate_limiter.py    # Token-bucket rate limiter
 │   └── middleware.py      # Request ID, logging, error handling
-├── frontend/
-│   └── app.py             # Legacy Streamlit UI (no longer launched)
 └── tests/
     ├── __init__.py
     ├── test_service.py
     └── test_routes.py
 ```
 
-## Running Components Separately
-
-```bash
-# Backend with Chainlit UI (single process)
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
-```

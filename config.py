@@ -86,7 +86,6 @@ class Settings(BaseSettings):
     # ── Server ───────────────────────────────────────────────────────────
     backend_host: str = Field(default="127.0.0.1")
     backend_port: int = Field(default=8000, ge=1, le=65535)
-    frontend_port: int = Field(default=8501, ge=1, le=65535)
     workers: int = Field(
         default=4,
         ge=1,
@@ -109,15 +108,6 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
-    # Map legacy env var PORT → frontend_port
-    @field_validator("frontend_port", mode="before")
-    @classmethod
-    def _port_alias(cls, v: int | str | None) -> int:
-        """Allow the legacy ``PORT`` env var to set ``frontend_port``."""
-        port_env = os.getenv("PORT")
-        if v in (None, 8501, "8501") and port_env:
-            return int(port_env)
-        return int(v) if v is not None else 8501
 
     @field_validator("log_level", mode="before")
     @classmethod

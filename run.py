@@ -1,4 +1,4 @@
-"""Launcher: starts the FastAPI backend and Streamlit frontend together.
+"""Launcher: starts the FastAPI backend with Chainlit UI mounted.
 
 Automatically uses the ``.venv`` virtual environment.  If it doesn't
 exist yet, the script creates it and installs dependencies first.
@@ -8,7 +8,7 @@ Usage::
     python run.py           # start the app
     python run.py --test    # run the test suite instead
 
-Press Ctrl+C to stop both processes.
+Press Ctrl+C to stop the backend.
 """
 
 import os
@@ -103,7 +103,6 @@ def main() -> None:
     # Read config from env.
     backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
     backend_port = os.getenv("BACKEND_PORT", "8000")
-    frontend_port = os.getenv("PORT", os.getenv("FRONTEND_PORT", "8501"))
     workers = os.getenv("WORKERS", "4")
     log_level = os.getenv("LOG_LEVEL", "info").lower()
 
@@ -126,32 +125,17 @@ def main() -> None:
         backend = subprocess.Popen(backend_cmd, cwd=str(_ROOT))
         procs.append(backend)
 
-        # Give the backend a moment to start.
-        time.sleep(2)
-
-        # ── Start Streamlit frontend ─────────────────────────────────
-        frontend_cmd = [
-            venv_py, "-m", "streamlit", "run",
-            str(_ROOT / "frontend" / "app.py"),
-            "--server.port", frontend_port,
-            "--server.address", "0.0.0.0",
-            "--browser.gatherUsageStats", "false",
-        ]
-        print(f"[run] Starting frontend: {' '.join(frontend_cmd)}")
-        frontend = subprocess.Popen(frontend_cmd, cwd=str(_ROOT))
-        procs.append(frontend)
-
-        print(f"\n[run] Backend  -> http://{backend_host}:{backend_port}/api/v1/health")
-        print(f"[run] Frontend -> http://localhost:{frontend_port}")
+        print(f"\n[run] Backend with Chainlit UI -> http://{backend_host}:{backend_port}/")
+        print(f"[run] Health check -> http://{backend_host}:{backend_port}/api/v1/health")
+        print(f"[run] API docs -> http://{backend_host}:{backend_port}/docs")
         print("[run] Press Ctrl+C to stop.\n")
 
-        # Wait for either process to exit.
+        # Wait for the backend process to exit.
         while True:
-            for p in procs:
-                ret = p.poll()
-                if ret is not None:
-                    print(f"[run] Process {p.pid} exited with code {ret}.")
-                    raise SystemExit(ret)
+            ret = backend.poll()
+            if ret is not None:
+                print(f"[run] Backend process {backend.pid} exited with code {ret}.")
+                raise SystemExit(ret)
             time.sleep(1)
 
     except (KeyboardInterrupt, SystemExit):
