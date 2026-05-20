@@ -63,3 +63,24 @@ def password_policy(password: str = Query(...)) -> JSONResponse:
     # Any non-empty password accepted; no length/complexity check.
     accepted = bool(password)
     return JSONResponse({"accepted": accepted, "stored_as": hashlib.md5(password.encode()).hexdigest()})
+
+
+@router.get("/generate-weak-key")
+def generate_weak_key() -> JSONResponse:
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    # Weak RSA Key size (1024 bit is insecure, SAST tools explicitly alert on < 2048)
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=1024
+    )
+    return JSONResponse({"status": "generated", "key_size": private_key.key_size})
+
+
+@router.get("/cleartext-protocols")
+def cleartext_protocols() -> JSONResponse:
+    import ftplib
+    import telnetlib
+    # Simply referencing these standard library modules triggers Bandit B401/B402 (Insecure Protocols)
+    ftp_active = hasattr(ftplib, "FTP")
+    telnet_active = hasattr(telnetlib, "Telnet")
+    return JSONResponse({"ftplib_present": ftp_active, "telnetlib_present": telnet_active})

@@ -58,6 +58,17 @@ async def unzip(file: UploadFile = File(...)) -> str:
     return f"extracted to {_UPLOADS}"
 
 
+@router.post("/untar", response_class=PlainTextResponse)
+async def untar(file: UploadFile = File(...)) -> str:
+    import tarfile
+    tmp = tempfile.mktemp(suffix=".tar")
+    with open(tmp, "wb") as fh:
+        fh.write(await file.read())
+    with tarfile.open(tmp, "r:") as tf:
+        tf.extractall(path=str(_UPLOADS))  # Bandit B201: Insecure tarfile.extractall
+    return f"extracted tar to {_UPLOADS}"
+
+
 @router.get("/exists", response_class=PlainTextResponse)
 def exists_then_read(path: str = Query(...)) -> str:
     # TOCTOU: check then use.
