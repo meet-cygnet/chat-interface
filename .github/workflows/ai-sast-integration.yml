@@ -1,0 +1,97 @@
+name: AI-SAST Security Scanner
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+jobs:
+  semgrep:
+    name: Semgrep Scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Perform Semgrep Analysis
+        run: semgrep scan --config auto --sarif --output=semgrep.sarif
+
+      - name: Upload Semgrep SARIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+
+  codeql:
+    name: CodeQL Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+    
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python # Change to javascript, go, etc. as appropriate
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          upload: false
+          output: codeql-results
+
+      - name: Upload CodeQL SARIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif
+          path: codeql-results
+
+  parse-findings:
+    name: Parse Scans & Normalize Findings (${{ matrix.tool }})
+    runs-on: ubuntu-latest
+    needs: [semgrep, codeql]
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: 
+          - semgrep
+          - codeql
+    
+    # Run directly inside the pre-built AI-SAST Docker CLI container
+    container:
+      image: ghcr.io/meet-cygnet/ai-sast:latest
+
+    steps:
+      - name: Download ${{ matrix.tool }} SARIF
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.tool }}-sarif
+          path: ./raw-results
+
+      - name: Parse & Normalize Reports
+        run: |
+          echo "=== Parsing ${{ matrix.tool }} Findings ==="
+          sarif_file=$(find raw-results -name "*.sarif" | head -n 1)
+          if [ -n "$sarif_file" ]; then
+            ai-sast parse "$sarif_file" -o ./
+          else
+            echo "No SARIF report found for ${{ matrix.tool }}."
+            exit 1
+          fi
+
+          echo "=== Generated Normalized Artifacts ==="
+          ls -la ai-sast-normalized-*.json
+
+      - name: Upload Normalized Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: normalized-sast-reports-${{ matrix.tool }}
+          path: ai-sast-normalized-*.json
