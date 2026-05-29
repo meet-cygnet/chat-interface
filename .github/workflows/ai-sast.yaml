@@ -129,6 +129,12 @@ jobs:
           name: semgrep-sarif-${{ needs.prep.outputs.sha_short }}-${{ needs.prep.outputs.timestamp }}
           path: semgrep.sarif
 
+      - name: Upload Semgrep SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
   # ── SAST Tool B: CodeQL ───────────────────────────────────────────────────
   codeql:
     name: "SAST Tool B: CodeQL Scan (${{ matrix.language }})"
@@ -160,6 +166,12 @@ jobs:
           # Parallel matrix uploads to the same artifact name are merged automatically by actions/upload-artifact@v7.
           name: codeql-sarif-${{ needs.prep.outputs.sha_short }}-${{ needs.prep.outputs.timestamp }}
           path: codeql-results
+
+      - name: Upload CodeQL SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: codeql-results
+          category: codeql-${{ matrix.language }}
 
   # ── Track A & B: Parse SARIF + Fresh Model Analysis (Matrix-based) ──────────
   fresh-analysis:
